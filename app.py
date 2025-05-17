@@ -15,11 +15,18 @@ def get_color_name(R, G, B, color_data):
     min_dist = float('inf')
     closest_color = None
     for _, row in color_data.iterrows():
-        d = abs(R - row['R']) + abs(G - row['G']) + abs(B - row['B'])
-        if d < min_dist:
-            min_dist = d
-            closest_color = row
-    return closest_color
+        try:
+            d = abs(R - int(row['R'])) + abs(G - int(row['G'])) + abs(B - int(row['B']))
+            if d < min_dist:
+                min_dist = d
+                closest_color = row
+        except Exception as e:
+            st.write(f"Error reading row: {row} - {e}")
+    return closest_color if closest_color is not None else {
+        'color_name': 'Unknown',
+        'hex': '#000000'
+    }
+
 
 # UI
 st.title("🎨 Color Detection from Image (No OpenCV)")
