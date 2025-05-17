@@ -1,8 +1,8 @@
 import streamlit as st
-import cv2
 import pandas as pd
 import numpy as np
 from PIL import Image
+from streamlit_image_coordinates import streamlit_image_coordinates
 
 # Load color dataset
 @st.cache_data
@@ -21,49 +21,30 @@ def get_color_name(R, G, B, color_data):
             closest_color = row
     return closest_color
 
-# UI Layout
-st.title("🎨 Color Detection from Images")
+# UI
+st.title("🎨 Color Detection from Image (No OpenCV)")
 
 uploaded_file = st.file_uploader("Upload an Image", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    st.image(image, caption='Uploaded Image', use_column_width=True)
-    image_np = np.array(image)
+    image = Image.open(uploaded_file).convert("RGB")
+    st.write("**Click on the image below to detect a color**")
+    
+    coords = streamlit_image_coordinates(image, key="click_image")
 
-    color_data = load_colors()
+    if coords is not None:
+        x, y = int(coords['x']), int(coords['y'])
+        image_np = np.array(image)
+        r, g, b = image_np[y, x]
+        color_data = load_colors()
+        color_info = get_color_name(r, g, b, color_data)
+        hex_color = color_info['hex']
 
-    st.write("**Click anywhere on the image to detect color**")
-
-    # OpenCV logic
-    if st.button("Enable Color Picker"):
-        st.info("Close the image window after selecting to return result.")
-        
-        def click_event(event, x, y, flags, param):
-            if event == cv2.EVENT_LBUTTONDOWN:
-                b, g, r = image_np[y, x]
-                color_info = get_color_name(r, g, b, color_data)
-                hex_color = color_info['hex']
-                st.session_state['color'] = {
-                    'name': color_info['color_name'],
-                    'R': r, 'G': g, 'B': b,
-                    'hex': hex_color
-                }
-
-        cv2.namedWindow('Click Image')
-        cv2.setMouseCallback('Click Image', click_event)
-        cv2.imshow('Click Image', cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR))
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
-    # Show detected color
-    if 'color' in st.session_state:
-        color = st.session_state['color']
         st.markdown(f"""
-        ### 🎯 Detected Color: {color['name']}
-        - RGB: ({color['R']}, {color['G']}, {color['B']})
-        - HEX: {color['hex']}
+        ### 🎯 Detected Color: {color_info['color_name']}
+        - RGB: ({r}, {g}, {b})
+        - HEX: {hex_color}
         """)
         st.markdown(f"""
-        <div style="width:100px; height:50px; background-color:{color['hex']}; border:1px solid #000;"></div>
+        <div style="width:100px; height:50px; background-color:{hex_color}; border:1px solid #000;"></div>
         """, unsafe_allow_html=True)
