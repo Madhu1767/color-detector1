@@ -9,6 +9,9 @@ from streamlit_image_coordinates import streamlit_image_coordinates
 def load_colors():
     df = pd.read_csv("colors.csv")
     return df
+color_data = load_colors()
+st.write("🎨 Loaded Color Data Sample:")
+st.dataframe(color_data.head())
 
 # Find closest color name
 def get_color_name(R, G, B, color_data):
@@ -30,6 +33,7 @@ def get_color_name(R, G, B, color_data):
 # Streamlit UI
 st.title("🎨 Color Detection from Image (No OpenCV)")
 
+
 uploaded_file = st.file_uploader("Upload an Image", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
@@ -48,6 +52,9 @@ if uploaded_file is not None:
             st.write(f"🎨 Clicked Pixel RGB: ({r}, {g}, {b})")
 
             color_data = load_colors()
+            st.write("🎨 Loaded Color Data Sample:")
+            st.dataframe(color_data.head())
+
             color_info = get_color_name(r, g, b, color_data)
             hex_color = color_info['hex']
 
